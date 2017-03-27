@@ -1,17 +1,11 @@
-## Example Summary
+## Summary
 
-This example is intended to be a starting point for new development where
-a fuller set of kernel features and debug capabilities are enabled.
+Code used for the CC1310, SPI, and UART.
 
 ## Peripherals Exercised
 
-* `Board_LED0`  - Indicates that the board was initialized within `main()`
-
-## Example Usage
-
-* The example lights `Board_LED0` as part of the initialization in `main()`.
-Then a heartBeat task toggles the LED at a rate determined by the `arg0`
-parameter for the constructed Task instance in the .c file.
+SPI0
+UART0
 
 ## Application Design Details
 
