@@ -139,11 +139,14 @@ void spiTaskFxn(UArg arg0, UArg arg1)
 			{
 				initSequence(spiHandle);
 				UART_write(uartHandle,initBuff,sizeof(initBuff));
+				normalMode = true;
 			}
 			else if(strcmp(rxBuffer,inic) == 0)
 			{
 				initSequenceCircuit(spiHandle);
 				UART_write(uartHandle,cirBuff,sizeof(cirBuff));
+				normalMode = false;
+
 			}
 			else if(strcmp(rxBuffer,fact) == 0)
 			{
@@ -153,9 +156,9 @@ void spiTaskFxn(UArg arg0, UArg arg1)
 			else
 			{
 				if(normalMode)
-					readRegister(hexToDec(rxBuffer),spiHandle);
+					readRegister(hexToDec(rxBuffer),spiHandle, uartHandle);
 				else
-					readRegCirc(hexToDec(rxBuffer),spiHandle);
+					readRegCirc(hexToDec(rxBuffer),spiHandle, uartHandle);
 
 				regBuff[14] = rxBuffer[0];
 				regBuff[15] = rxBuffer[1];
@@ -211,5 +214,3 @@ int main(void)
 
     return (0);
 }
-
-
