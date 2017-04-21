@@ -28,7 +28,6 @@
 #include "Board.h"
 
 #define CSPin Board_DIO21
-uint8_t buffer8BitData[8];
 
 static PIN_Handle csPinHandle;
 static PIN_State csPinState;
@@ -47,6 +46,7 @@ const char factBuff[] = "Factory reset done.\n\r";
 const String init = "init";
 const String inic = "inic";
 const String fact = "fact";
+
 
 int countSize = 2;
 
@@ -77,25 +77,6 @@ int hexToDec(char *c)
 	return n;
 }
 
-int codeCommand(char *buffer)
-{
-	if(strcmp(buffer,"init"))
-	{
-		return 1;
-	}
-	if(strcmp(buffer,"inic"))
-	{
-		return 2;
-	}
-	if(strcmp(buffer,"fact"))
-	{
-		return 3;
-	}
-
-	return 4;
-}
-
-
 void spiTaskFxn(UArg arg0, UArg arg1)
 {
 
@@ -109,8 +90,9 @@ void spiTaskFxn(UArg arg0, UArg arg1)
 		UART_Handle uartHandle;
 		UART_Params UART_defParams;
 
-		char regBuff[] = "Register sent      \n\r";
+		//char regBuff[] = "Register sent      \n\r";
 		bool normalMode = true;
+		bool proceed = true;
 	    /* SPI Parameters initialization */
 	    SPI_Params_init(&SPI_defParams);
 	    SPI_defParams.dataSize = 8;
@@ -130,40 +112,42 @@ void spiTaskFxn(UArg arg0, UArg arg1)
 
 		while(1)
 		{
-
 			char rxBuffer[5] = {NULL};
 			UART_read(uartHandle,rxBuffer,4);
-			UART_write(uartHandle,rxBuffer,sizeof(rxBuffer));
+			//UART_write(uartHandle,rxBuffer,sizeof(rxBuffer));
 
-			if(strcmp(rxBuffer,init) == 0)
+			if(strcmp(rxBuffer,"init") == 0)
 			{
 				initSequence(spiHandle);
 				UART_write(uartHandle,initBuff,sizeof(initBuff));
+				normalMode = true;
 			}
-			else if(strcmp(rxBuffer,inic) == 0)
+			else if(strcmp(rxBuffer,"inic") == 0)
 			{
 				initSequenceCircuit(spiHandle);
 				UART_write(uartHandle,cirBuff,sizeof(cirBuff));
+				normalMode = false;
+
 			}
-			else if(strcmp(rxBuffer,fact) == 0)
+			else if(strcmp(rxBuffer,"fact") == 0)
 			{
 				factoryReset(spiHandle);
 				UART_write(uartHandle,factBuff,sizeof(factBuff));
 			}
+			else if(strcmp(rxBuffer,"cont") == 0)
+			{
+				while(proceed)
+				{
+					readRegisterContinuous(0xD0,spiHandle, uartHandle);
+				}
+			}
 			else
 			{
 				if(normalMode)
-					readRegister(hexToDec(rxBuffer),spiHandle);
+					readRegister(hexToDec(rxBuffer),spiHandle, uartHandle);
 				else
-					readRegCirc(hexToDec(rxBuffer),spiHandle);
-
-				regBuff[14] = rxBuffer[0];
-				regBuff[15] = rxBuffer[1];
-				regBuff[16] = rxBuffer[2];
-				regBuff[17] = rxBuffer[3];
-				UART_write(uartHandle,regBuff,sizeof(regBuff));
+					readRegCirc(hexToDec(rxBuffer),spiHandle, uartHandle);
 			}
-
 		}
 
 
@@ -211,5 +195,3 @@ int main(void)
 
     return (0);
 }
-
-
